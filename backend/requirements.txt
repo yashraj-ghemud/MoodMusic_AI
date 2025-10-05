@@ -7,4 +7,8 @@ pillow==11.0.0
 requests==2.32.3
 python-dotenv==1.0.0
 google-generativeai==0.7.1
+google-api-core==2.23.0
+googleapis-common-protos==1.63.2
+grpcio==1.67.1
+protobuf==4.25.4
 deepface==0.0.91
