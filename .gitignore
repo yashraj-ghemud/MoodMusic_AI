@@ -1,0 +1,23 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Environments
+.venv/
+.env
+.env.local
+.env.development.local
+.env.production.local
+.env.test.local
+
+# Build artifacts
+.dist/
+
+# OS
+.DS_Store
+
+# Frontend build outputs
+node_modules/
+dist/

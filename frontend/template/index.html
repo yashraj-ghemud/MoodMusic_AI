@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MoodMusic AI · Feel the Beat of Your Emotions</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+        integrity="sha512-VYd7DbxglnwBEmc6k9rQ2roFuCTP/ILwVsQt1zAr72Xd1LSeX776BF3/f6/Dr7guPmyAnbcW2kwiVdc+Xr9N3A=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+    <video class="bg-video" autoplay muted loop playsinline>
+        <source src="{{ url_for('static', filename='assets/bg.mp4') }}" type="video/mp4">
+    </video>
+    <div class="bg-gradient"></div>
+
+    <div class="container">
+        <header class="header">
+            <span class="badge">Beta playground</span>
+            <h1 class="title">
+                <i class="fas fa-wave-square"></i>
+                MoodMusic <span>AI</span>
+            </h1>
+            <p class="subtitle">Capture or upload a snapshot, let AI read your vibe, and dive into a curated soundtrack
+                in
+                seconds.</p>
+        </header>
+
+        <section class="mood-box-section" aria-labelledby="moodBoxHeading">
+            <div class="mood-box-glow"></div>
+            <div class="mood-box">
+                <div class="mood-box-header">
+                    <h2 id="moodBoxHeading"><i class="fas fa-comment-dots"></i> Mood box</h2>
+                    <p>Not camera-ready? Describe your vibe and let Gemini score the perfect soundtrack.</p>
+                </div>
+                <div class="mood-box-body">
+                    <textarea id="moodInput" rows="3"
+                        placeholder="Example: Feeling nostalgic for late-night road trips with close friends..."
+                        aria-label="Describe your mood"></textarea>
+                    <div class="mood-preset-row">
+                        <button class="mood-chip" type="button"
+                            data-mood-preset="Feeling unstoppable and craving high-energy anthems."><span>⚡</span> Hype
+                            me up</button>
+                        <button class="mood-chip" type="button"
+                            data-mood-preset="Soft rainy-day vibes, longing for mellow acoustic comforts."><span>🌧️</span>
+                            Rainy &amp; reflective</button>
+                        <button class="mood-chip" type="button"
+                            data-mood-preset="Need dreamy focus beats for deep work."><span>🌌</span> Focus
+                            mode</button>
+                        <button class="mood-chip" type="button"
+                            data-mood-preset="Celebrating a big win, want dancefloor-ready tracks."><span>🎉</span>
+                            Celebration</button>
+                    </div>
+                </div>
+                <div class="mood-box-footer">
+                    <button id="moodSubmit" class="btn btn-primary">
+                        <i class="fas fa-music"></i>
+                        Curate from my words
+                    </button>
+                    <p class="mood-box-hint">Tip: be specific about moments, feelings, or artists you love.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="upload-section" id="uploadSection">
+            <div class="upload-grid">
+                <div class="card camera-card">
+                    <h3><i class="fas fa-camera"></i> Live capture</h3>
+                    <div class="camera-shell">
+                        <video id="video" autoplay playsinline></video>
+                        <canvas id="canvas" hidden></canvas>
+                        <div class="camera-overlay">
+                            <div class="scan-line"></div>
+                            <div class="focus-ring"></div>
+                        </div>
+                    </div>
+                    <div class="card-actions">
+                        <button id="startCamera" class="btn btn-primary">
+                            <i class="fas fa-video"></i>
+                            Start camera
+                        </button>
+                        <button id="capturePhoto" class="btn btn-secondary" disabled>
+                            <i class="fas fa-camera-retro"></i>
+                            Capture
+                        </button>
+                    </div>
+                    <p class="hint">Works best in good lighting • No data is stored</p>
+                </div>
+
+                <div class="card upload-card">
+                    <h3><i class="fas fa-cloud-upload-alt"></i> Upload instead</h3>
+                    <div class="upload-area" id="uploadArea">
+                        <div class="upload-content">
+                            <i class="fas fa-photo-video"></i>
+                            <p>Drop a selfie here or browse from your device</p>
+                            <p class="hint">JPG · PNG · HEIC · up to 5&nbsp;MB</p>
+                        </div>
+                        <input type="file" id="fileInput" accept="image/*" hidden>
+                        <button class="btn btn-outline" id="browseBtn">
+                            <i class="fas fa-folder-open"></i>
+                            Browse files
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="preview-container" id="previewContainer" hidden>
+                <img id="previewImage" alt="Preview of uploaded face">
+                <div class="preview-actions">
+                    <button id="analyzeBtn" class="btn btn-primary">
+                        <i class="fas fa-wand-magic-sparkles"></i>
+                        Decode my mood
+                    </button>
+                    <button id="retakeBtn" class="btn btn-outline">
+                        <i class="fas fa-arrows-rotate"></i>
+                        Try another photo
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <section class="loading-section" id="loadingSection" hidden>
+            <div class="card loading-card">
+                <div class="loading-visual">
+                    <div class="pulse"></div>
+                    <div class="pulse"></div>
+                    <div class="pulse"></div>
+                </div>
+                <h3>Reading your vibe...</h3>
+                <p>We scan micro-expressions, translate them into human words, and line up music that resonates.</p>
+                <ul class="loading-steps">
+                    <li id="step1"><i class="fas fa-eye"></i> Detecting mood signals</li>
+                    <li id="step2"><i class="fas fa-brain"></i> Summarising the feels</li>
+                    <li id="step3"><i class="fas fa-music"></i> Cranking your soundtrack</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="results-section" id="resultsSection" hidden>
+            <div class="results-grid">
+                <div class="card emotion-card">
+                    <div class="emotion-header">
+                        <div class="emotion-icon" id="emotionIcon">
+                            <i class="fas fa-smile"></i>
+                        </div>
+                        <div>
+                            <h3 id="emotionTitle">Your Mood: Happy</h3>
+                            <p id="emotionDescription">You're radiating pure joy today!</p>
+                        </div>
+                    </div>
+                    <div class="confidence-bar">
+                        <div class="confidence-fill" id="confidenceFill"></div>
+                    </div>
+                    <div class="confidence-meta">
+                        <span id="confidenceText">85% confident</span>
+                        <button id="shareBtn" class="btn btn-mini">
+                            <i class="fas fa-share"></i>
+                            Share
+                        </button>
+                    </div>
+                    <div class="emotion-breakdown" id="emotionBreakdown"></div>
+                </div>
+
+                <div class="card playlist-card">
+                    <h3><i class="fas fa-headphones"></i> Your bespoke playlist</h3>
+                    <p class="playlist-hint">Pressed for time? Tap a track to jump straight into YouTube or Spotify.</p>
+                    <p class="curator-summary" id="curatorSummary" hidden></p>
+                    <div class="songs-grid" id="songsGrid"></div>
+                    <button id="tryAgainBtn" class="btn btn-outline full-width">
+                        <i class="fas fa-arrows-rotate"></i>
+                        Scan another mood
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <footer class="footer">
+            <p>Built with curiosity for the CodeKong Hackathon · No selfies leave your browser.</p>
+            <div class="footer-links">
+                <a href="https://developers.google.com/ai" target="_blank" rel="noopener">Gemini</a>
+                <span>•</span>
+                <a href="https://onnxruntime.ai/" target="_blank" rel="noopener">ONNX Runtime</a>
+                <span>•</span>
+                <a href="https://open.spotify.com/" target="_blank" rel="noopener">Spotify</a>
+            </div>
+        </footer>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}" defer></script>
+</body>
+
+</html>
