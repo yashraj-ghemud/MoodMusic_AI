@@ -6,10 +6,9 @@ from dotenv import load_dotenv
 from flask import Flask, jsonify, render_template, request
 from flask_cors import CORS
 
-from .config import Config
-from emotion_analyzer import EmotionAnalyzer
-from music_finder import MusicFinder
-
+from backend.config import Config
+from backend.emotion_analyzer import EmotionAnalyzer
+from backend.music_finder import MusicFinder
 
 load_dotenv()
 
