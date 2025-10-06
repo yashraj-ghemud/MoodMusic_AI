@@ -1,6 +1,7 @@
 import base64
 import io
 import os
+import shutil
 from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
 
@@ -10,13 +11,32 @@ import onnxruntime as ort
 import requests
 from PIL import Image
 
+
+MODELS_DIR = Path(__file__).resolve().parent / "models"
+DEEPFACE_HOME = MODELS_DIR / ".deepface"
+WEIGHTS_DIR = DEEPFACE_HOME / "weights"
+
+DEEPFACE_HOME.mkdir(parents=True, exist_ok=True)
+WEIGHTS_DIR.mkdir(parents=True, exist_ok=True)
+
+for filename in (
+    "emotion-ferplus-8.onnx",
+    "deploy.prototxt",
+    "res10_300x300_ssd_iter_140000_fp16.caffemodel",
+):
+    src_path = MODELS_DIR / filename
+    dst_path = WEIGHTS_DIR / filename
+    if src_path.exists() and not dst_path.exists():
+        shutil.copy(src_path, dst_path)
+
+os.environ.setdefault("DEEPFACE_HOME", str(DEEPFACE_HOME))
+os.environ.setdefault("DEEPFACE_BACKEND", "ssd")
+
+
 try:
     from deepface import DeepFace
 except Exception:  # pragma: no cover - optional dependency may fail at import time
     DeepFace = None
-
-os.makedirs(os.path.join(os.getcwd(), "backend/models"), exist_ok=True)
-os.environ["DEEPFACE_BACKEND"]="ssd"
 
 class EmotionAnalyzer:
     """ONNXRuntime-powered FER+ emotion detector with graceful fallbacks."""

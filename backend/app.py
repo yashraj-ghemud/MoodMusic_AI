@@ -3,12 +3,13 @@
 from pathlib import Path
 
 from dotenv import load_dotenv
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, current_app, jsonify, render_template, request
 from flask_cors import CORS
 
 from backend.config import Config
 from backend.emotion_analyzer import EmotionAnalyzer
 from backend.music_finder import MusicFinder
+
 
 load_dotenv()
 
@@ -38,45 +39,49 @@ def health_check():
 
 @app.route("/api/analyze", methods=["POST"])
 def analyze_image():
-    payload = request.get_json(silent=True) or {}
-    image_data = payload.get("image")
+    try:
+        payload = request.get_json(silent=True) or {}
+        image_data = payload.get("image")
 
-    if not image_data:
-        return jsonify({"error": "No image data provided."}), 400
+        if not image_data:
+            return jsonify({"error": "No image data provided."}), 400
 
-    analysis = emotion_analyzer.analyze_emotion(image_data)
+        analysis = emotion_analyzer.analyze_emotion(image_data)
 
-    if not analysis.get("success"):
-        error_code = analysis.get("code")
-        status = 422 if error_code == "no_face" else 500
-        payload = {
-            "error": analysis.get("error", "Emotion analysis failed."),
-            "emotion": analysis.get("emotion", "neutral"),
-            "description": analysis.get(
-                "description", "Couldn't read your vibes, so here's something balanced."
-            ),
-            "confidence": analysis.get("confidence", 0.0),
-        }
-        if status != 422:
-            fallback = music_finder.get_song_recommendations("neutral", "fallback playlist")
-            payload["songs"] = fallback.get("songs", [])
+        if not analysis.get("success"):
+            error_code = analysis.get("code")
+            status = 422 if error_code == "no_face" else 500
+            response_payload = {
+                "error": analysis.get("error", "Emotion analysis failed."),
+                "emotion": analysis.get("emotion", "neutral"),
+                "description": analysis.get(
+                    "description", "Couldn't read your vibes, so here's something balanced."
+                ),
+                "confidence": analysis.get("confidence", 0.0),
+            }
+            if status != 422:
+                fallback = music_finder.get_song_recommendations("neutral", "fallback playlist")
+                response_payload["songs"] = fallback.get("songs", [])
 
-        return jsonify(payload), status
+            return jsonify(response_payload), status
 
-    recommendations = music_finder.get_song_recommendations(
-        analysis["emotion"], analysis["description"], mood_text=payload.get("mood")
-    )
+        recommendations = music_finder.get_song_recommendations(
+            analysis["emotion"], analysis["description"], mood_text=payload.get("mood")
+        )
 
-    return jsonify(
-        {
-            "emotion": analysis["emotion"],
-            "description": analysis["description"],
-            "confidence": analysis.get("confidence", 0.0),
-            "all_emotions": analysis.get("all_emotions", {}),
-            "songs": recommendations.get("songs", []),
-            "curator_summary": recommendations.get("curator_summary", ""),
-        }
-    )
+        return jsonify(
+            {
+                "emotion": analysis["emotion"],
+                "description": analysis["description"],
+                "confidence": analysis.get("confidence", 0.0),
+                "all_emotions": analysis.get("all_emotions", {}),
+                "songs": recommendations.get("songs", []),
+                "curator_summary": recommendations.get("curator_summary", ""),
+            }
+        )
+    except Exception as exc:  # pragma: no cover - ensure API stays responsive
+        current_app.logger.exception("/api/analyze failed")
+        return jsonify({"error": "Analysis failed", "detail": str(exc)}), 502
 
 
 @app.route("/api/mood", methods=["POST"])

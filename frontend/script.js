@@ -252,7 +252,8 @@ class MoodMusicApp {
             });
 
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                const errorBody = await response.text();
+                throw new Error(`HTTP ${response.status}: ${errorBody || 'Empty response'}`);
             }
 
             const result = await response.json();
@@ -260,7 +261,10 @@ class MoodMusicApp {
 
         } catch (error) {
             console.error('Analysis error:', error);
-            this.showNotification('Failed to analyze image. Please try again.', 'error');
+            const message = error && error.message
+                ? `Failed to analyze image: ${error.message}`
+                : 'Failed to analyze image. Please try again.';
+            this.showNotification(message, 'error');
             this.showSection('upload');
         }
     }
