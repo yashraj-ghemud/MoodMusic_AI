@@ -15,6 +15,8 @@ try:
 except Exception:  # pragma: no cover - optional dependency may fail at import time
     DeepFace = None
 
+os.makedirs(os.path.join(os.getcwd(), "backend/models"), exist_ok=True)
+os.environ["DEEPFACE_BACKEND"]="ssd"
 
 class EmotionAnalyzer:
     """ONNXRuntime-powered FER+ emotion detector with graceful fallbacks."""
