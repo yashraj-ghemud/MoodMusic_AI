@@ -13,10 +13,11 @@ from PIL import Image
 
 
 MODELS_DIR = Path(__file__).resolve().parent / "models"
-DEEPFACE_HOME = MODELS_DIR / ".deepface"
-WEIGHTS_DIR = DEEPFACE_HOME / "weights"
+DEEPFACE_ROOT = MODELS_DIR
+DEEPFACE_CACHE = DEEPFACE_ROOT / ".deepface"
+WEIGHTS_DIR = DEEPFACE_CACHE / "weights"
 
-DEEPFACE_HOME.mkdir(parents=True, exist_ok=True)
+DEEPFACE_CACHE.mkdir(parents=True, exist_ok=True)
 WEIGHTS_DIR.mkdir(parents=True, exist_ok=True)
 
 for filename in (
@@ -29,7 +30,7 @@ for filename in (
     if src_path.exists() and not dst_path.exists():
         shutil.copy(src_path, dst_path)
 
-os.environ.setdefault("DEEPFACE_HOME", str(DEEPFACE_HOME))
+os.environ.setdefault("DEEPFACE_HOME", str(DEEPFACE_ROOT))
 os.environ.setdefault("DEEPFACE_BACKEND", "ssd")
 
 
@@ -99,7 +100,7 @@ class EmotionAnalyzer:
     }
 
     def __init__(self) -> None:
-        models_root = Path(__file__).resolve().parent / "models"
+        models_root = MODELS_DIR
         self._model_path = models_root / "emotion-ferplus-8.onnx"
         self._session = None
         self._input_name = None
@@ -388,6 +389,11 @@ class EmotionAnalyzer:
 
     def _ensure_file_downloaded(self, path: Path, url: str) -> None:
         if path.exists():
+            return
+
+        local_cache = MODELS_DIR / path.name
+        if local_cache.exists():
+            path.write_bytes(local_cache.read_bytes())
             return
 
         response = requests.get(url, timeout=60)
