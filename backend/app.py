@@ -9,6 +9,9 @@ from flask_cors import CORS
 from backend.config import Config
 from backend.emotion_analyzer import EmotionAnalyzer
 from backend.music_finder import MusicFinder
+import os
+os.environ["DEEPFACE_HOME"] = os.path.join(os.getcwd(), "backend")  # result: backend/.deepface/weights
+os.environ["DEEPFACE_BACKEND"] = "ssd"  # fastest stable detector on servers
 
 
 load_dotenv()
